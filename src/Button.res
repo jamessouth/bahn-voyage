@@ -1,7 +1,9 @@
-// Styling from https://tailwind-elements.com/docs/standard/components/buttons/
-let make = props =>
-  <button
-    {...
-    props}
-    className="inline-block px-6 py-2.5 bg-blue-600 text-white font-medium text-xs leading-tight uppercase rounded shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out"
-  />
+@react.component
+let make = (
+  ~onClick,
+  ~disabled=false,
+  ~className="text-stone-800 mt-14 bg-stone-100 hover:bg-stone-300 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7",
+  ~children,
+) => {
+  <button type_="button" className onClick disabled> {children} </button>
+}
