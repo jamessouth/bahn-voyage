@@ -3,12 +3,7 @@ let make = (~on_Click, ~children) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   <form className="w-4/5 m-auto relative">
-    <fieldset className="flex flex-col items-center justify-around h-72">
-      <legend className="text-stone-100 m-auto mb-6 text-3xl font-fred">
-        {React.string("uname")}
-      </legend>
-      {children}
-    </fieldset>
+    <fieldset className="flex flex-col items-center justify-around h-72"> {children} </fieldset>
     {switch submitClicked {
     | false => React.null
     | true =>

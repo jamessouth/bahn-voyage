@@ -22,8 +22,12 @@ let make = () => {
   }
   <>
     <h1 className=" "> {React.string("Bahn Voyage")} </h1>
-    <Form on_Click>
-      <Input value=username setFunc=setUsername />
-    </Form>
+    {switch canEnter {
+    | true => <Lobby />
+    | false =>
+      <Form on_Click>
+        <Input value=username setFunc=setUsername />
+      </Form>
+    }}
   </>
 }
