@@ -8,6 +8,9 @@ module.exports = {
         entry_mob_tall: 'url(/entryMobTall.jpg)',
         entry_mob_wide: 'url(/entryMobWide.jpg)',
       },
+      fontFamily: {
+        amar: 'Amarante, serif',
+      },
     },
   },
   plugins: [],

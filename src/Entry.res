@@ -21,7 +21,7 @@ let make = () => {
     }
   }
   <>
-    <h1 className=" "> {React.string("Bahn Voyage")} </h1>
+    <h1 className="font-amar text-lg"> {React.string("BAHN VOYAGE")} </h1>
     {switch canEnter {
     | true => <Lobby />
     | false =>
