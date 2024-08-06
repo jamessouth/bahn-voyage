@@ -17,7 +17,7 @@
   border-width: 0;
 }
 
-svg {
+svg#bahn {
   stroke-dasharray: 130;
   stroke-dashoffset: 130;
   fill: transparent;
