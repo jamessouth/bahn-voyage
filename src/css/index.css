@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.clip {
-  clip-path: url(#clip-00);
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -17,6 +13,9 @@
   border-width: 0;
 }
 
+.clip {
+  clip-path: url(#clip-00);
+}
 svg#bahn {
   stroke-dasharray: 130;
   stroke-dashoffset: 130;
@@ -33,5 +32,16 @@ svg#bahn {
 @keyframes fillIn {
   to {
     fill: url(#skyGradient);
+  }
+}
+
+div#vid {
+  opacity: 0;
+  animation: fadeIn 6s 4s cubic-bezier(0.88, 0.05, 0.62, 0.45) forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
   }
 }

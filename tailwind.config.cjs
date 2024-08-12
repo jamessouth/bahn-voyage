@@ -8,6 +8,9 @@ module.exports = {
         entry_mob_tall: 'url(/entryMobTall.jpg)',
         entry_mob_wide: 'url(/entryMobWide.jpg)',
       },
+      boxShadow: {
+        voyage: 'inset 0 0 13px 11px #edddbbbb',
+      },
       fontFamily: {
         amar: 'Amarante, serif',
       },
