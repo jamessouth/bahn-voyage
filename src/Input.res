@@ -13,6 +13,7 @@ let make = (~value, ~setFunc) => {
       inputMode="text"
       onChange
       onKeyPress={_e => ()}
+      placeholder="3-12 letters"
       spellCheck=false
       type_="text"
       value

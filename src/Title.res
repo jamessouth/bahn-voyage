@@ -1,18 +1,5 @@
-let user_min_len = 3
-let user_max_len = 12
-
 @react.component
-let make = (~playerName, ~setPlayerName, ~setCanEnter) => {
-  let on_Click = () => {
-    switch (
-      String.length(playerName) < user_min_len || String.length(playerName) > user_max_len,
-      String.match(playerName, %re("/\W/")),
-    ) {
-    | (false, None) => setCanEnter(_ => true)
-
-    | (true, _) | (false, Some(_)) => ()
-    }
-  }
+let make = () => {
   <>
     <svg id="bahn" width="230.25" height="74.641" version="1.1" viewBox="0 0 60.921 19.749">
       <path
@@ -21,38 +8,38 @@ let make = (~playerName, ~setPlayerName, ~setCanEnter) => {
         stroke="#040306"
         ariaLabel="BAHN"
       />
-      //   <defs>
-      //     <linearGradient id="skyGradient" x1="100%" y1="100%">
-      //       <animate
-      //         attributeName="x1"
-      //         values="-1.25;-0.5;0;.5;1;.5;0;-0.5;-1.25"
-      //         dur="5s"
-      //         repeatCount="indefinite"
-      //       />
-      //       <animate
-      //         attributeName="y1"
-      //         values="1.5;1;.5;0;-0.5;-1;-0.5;0;.5;1;1.5"
-      //         dur="7s"
-      //         repeatCount="indefinite"
-      //       />
-      //       <stop offset="20%" stopColor="#edddbb" stopOpacity=".85">
-      //         <animate
-      //           attributeName="stop-color"
-      //           values="#9b3915;#dd850d;#8b6a3b;#243b26;#343635;#edddbb;#628580;#9b3915;"
-      //           dur="19s"
-      //           repeatCount="indefinite"
-      //         />
-      //       </stop>
-      //       <stop offset="80%" stopColor="#628580" stopOpacity=".8">
-      //         <animate
-      //           attributeName="stop-color"
-      //           values="#343635;#628580;#edddbb;#dd850d;#243b26;#8b6a3b;#9b3915;#343635"
-      //           dur="17s"
-      //           repeatCount="indefinite"
-      //         />
-      //       </stop>
-      //     </linearGradient>
-      //   </defs>
+      <defs>
+        <linearGradient id="skyGradient" x1="100%" y1="100%">
+          <animate
+            attributeName="x1"
+            values="-1.25;-0.5;0;.5;1;.5;0;-0.5;-1.25"
+            dur="5s"
+            repeatCount="indefinite"
+          />
+          <animate
+            attributeName="y1"
+            values="1.5;1;.5;0;-0.5;-1;-0.5;0;.5;1;1.5"
+            dur="7s"
+            repeatCount="indefinite"
+          />
+          <stop offset="20%" stopColor="#edddbb" stopOpacity=".85">
+            <animate
+              attributeName="stop-color"
+              values="#9b3915;#dd850d;#8b6a3b;#243b26;#343635;#edddbb;#628580;#9b3915;"
+              dur="19s"
+              repeatCount="indefinite"
+            />
+          </stop>
+          <stop offset="80%" stopColor="#628580" stopOpacity=".8">
+            <animate
+              attributeName="stop-color"
+              values="#343635;#628580;#edddbb;#dd850d;#243b26;#8b6a3b;#9b3915;#343635"
+              dur="17s"
+              repeatCount="indefinite"
+            />
+          </stop>
+        </linearGradient>
+      </defs>
     </svg>
     <div id="vid" className="shadow-voyage rounded-tl rounded-br rounded-bl-2xl rounded-tr-2xl">
       <svg className="w-0 h-0 absolute">
@@ -79,14 +66,5 @@ let make = (~playerName, ~setPlayerName, ~setCanEnter) => {
         <p> {React.string("Looks like your browser doesn't support HTML5 video.")} </p>
       </video>
     </div>
-    //   <h1 className="font-amar font-bold text-center text-9xl">
-    //     {React.string("BAHN")}
-    //     <br />
-    //     {React.string("VOYAGE")}
-    //   </h1>
-
-    <Form on_Click>
-      <Input value=playerName setFunc=setPlayerName />
-    </Form>
   </>
 }
