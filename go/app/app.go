@@ -64,9 +64,26 @@ func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.Han
 // 	}
 // }
 
+const maxLobbyGames = 3
+
 type req struct {
 	PlayerName string `json:"playerName"`
 }
+
+type game struct {
+	Id      int64 `json:"id"`
+	Players []req `json:"players"`
+}
+
+type lobby struct {
+	Games []game `json:"games"`
+}
+
+var (
+	lobbyGames = lobby{
+		Games: []game{},
+	}
+)
 
 func getLobby() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -89,40 +106,22 @@ func getLobby() http.HandlerFunc {
 		if err != nil {
 			fmt.Println("g", err)
 		}
-		fmt.Println(s.PlayerName)
+		fmt.Println("name", s.PlayerName)
 
-		// newgame := game{
-		// 	Players:        []player{},
-		// 	CurrentEvent:   historicalEvent{},
-		// 	LastEventWrong: false,
-		// 	WrongPlayer:    player{},
-		// 	InitialResp:    true,
-		// }
+		for len(lobbyGames.Games) < maxLobbyGames {
+			lobbyGames.Games = append(lobbyGames.Games, game{
+				Id:      time.Now().UnixNano(),
+				Players: []req{},
+			})
+		}
 
-		// playOrder = make([]string, 0, len(conns))
+		b, err := json.Marshal(lobbyGames)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		os.Stdout.Write(b)
 
-		// for socket, name := range conns {
-		// 	fmt.Println("a", socket, name)
-		// 	playOrder = append(playOrder, socket)
-		// 	newgame.Players = append(newgame.Players, player{
-		// 		Name:     name,
-		// 		SocketId: socket,
-		// 		Score:    0,
-		// 		IsTurn:   false,
-		// 		Timeline: []historicalEvent{},
-		// 	})
-		// }
-		// for _, socket := range playOrder {
-		// 	fmt.Println("b", socket, conns[socket])
-		// }
-
-		// err := client.Trigger("private-gamestate-channel", "gamestate-event", newgame)
-		// if err != nil {
-		// 	fmt.Println("push", err)
-		// }
-
-		// go timer(client)
-		w.Write([]byte("success"))
+		w.Write(b)
 
 	}
 }

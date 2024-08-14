@@ -10,10 +10,10 @@ module Response = {
 external fetch: (
   string,
   'params,
-) => promise<Response.t<{"token": Nullable.t<string>, "error": Nullable.t<string>}>> = "fetch"
+) => promise<Response.t<{"a": Nullable.t<string>, "error": Nullable.t<string>}>> = "fetch"
 
 @react.component
-let make = (~playerName, ~setPlayerName) => {
+let make = (~playerName, ~setPlayerName, ~setXx) => {
   let login = async name => {
     let body = {
       "playerName": name,
@@ -27,14 +27,14 @@ let make = (~playerName, ~setPlayerName) => {
       "body": JSON.stringifyAny(body),
     }
 
-    try {
+    let o = try {
       let response = await fetch("/lobby", params)
       let data = await response->Response.json
 
       switch Nullable.toOption(data["error"]) {
       | Some(msg) => Error(msg)
       | None =>
-        switch Nullable.toOption(data["token"]) {
+        switch Nullable.toOption(data["a"]) {
         | Some(token) =>
           Console.log2("tok", token)
           Ok(token)
@@ -44,6 +44,11 @@ let make = (~playerName, ~setPlayerName) => {
     } catch {
     | _ => Error("Unexpected network error occurred")
     }
+    let p = switch o {
+    | Ok(d) => d
+    | Error(e) => e
+    }
+    setXx(_ => p)
   }
 
   let on_Click = () => {
@@ -53,7 +58,7 @@ let make = (~playerName, ~setPlayerName) => {
       ->slice(~start=0, ~end=user_max_len)
       ->padEnd(user_min_len, "_")
 
-    login(sanitizedName)->ignore
+    login(sanitizedName)->Promise.done
   }
 
   <Form on_Click>

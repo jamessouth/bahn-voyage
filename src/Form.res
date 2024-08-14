@@ -1,11 +1,9 @@
 @react.component
 let make = (~on_Click, ~children) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
-  <>
-    //   <form className="w-4/5 m-auto relative">
-    // <fieldset className="flex flex-col items-center justify-around h-72">
-    {children}
-    // </fieldset>
+
+  <form className="w-4/5 m-auto relative">
+    <fieldset className="flex flex-col items-center justify-around h-72"> {children} </fieldset>
     {switch submitClicked {
     | false => React.null
     | true =>
@@ -20,6 +18,5 @@ let make = (~on_Click, ~children) => {
       }}>
       {React.string("submit")}
     </Button>
-  </>
-  //   </form>
+  </form>
 }
