@@ -64,7 +64,7 @@ func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.Han
 // 	}
 // }
 
-const maxLobbyGames = 3
+const numLobbyGames = 3
 
 type req struct {
 	PlayerName string `json:"playerName"`
@@ -108,7 +108,7 @@ func getLobby() http.HandlerFunc {
 		}
 		fmt.Println("name", s.PlayerName)
 
-		for len(lobbyGames.Games) < maxLobbyGames {
+		for len(lobbyGames.Games) < numLobbyGames {
 			lobbyGames.Games = append(lobbyGames.Games, game{
 				Id:      time.Now().UnixNano(),
 				Players: []req{},

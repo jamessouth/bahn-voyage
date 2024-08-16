@@ -1,4 +1,9 @@
-type t = array<game>
+type lobbyGame = {
+  id: string,
+  players: array<string>,
+}
+
+type t = array<lobbyGame>
 
 type error = string
 
@@ -7,14 +12,19 @@ type lobby =
   | Error(error)
   | Data(t)
 
-let baconStruct = S.array(S.string())
+let lobbySchema = S.array(
+  S.object(s => {
+    id: s.field("id", S.string),
+    players: s.field("players", S.array(S.string)->S.arrayMaxLength(5)),
+  }),
+)->S.arrayLength(3)
 
-let constructBacon = x => {
-  let val = x->S.parseAnyWith(baconStruct)
+let constructLobby = x => {
+  let val = x->S.parseAnyWith(lobbySchema)
 
   switch val {
   | Ok(a) => Data(a)
-  | Error(e) => Error(e->S.Error.toString)
+  | Error(e) => Error(e->S.Error.message)
   }
 }
 
