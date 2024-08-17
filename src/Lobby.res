@@ -7,8 +7,6 @@ type t = array<lobbyGame>
 
 type error = string
 
-let makeError = (e: string): error => e
-
 type lobby =
   | Loading
   | Error(error)
@@ -20,13 +18,49 @@ let lobbySchema = S.array(
     players: s.field("players", S.array(S.string)->S.arrayMaxLength(5)),
   }),
 )->S.arrayLength(3)
+let makeError = (e: string): error => e
 
-let constructLobby = json => {
+let makeLobby = json => {
   let val = json->S.parseAnyWith(lobbySchema)
 
   switch val {
   | Ok(a) => Data(a)
   | Error(e) => Error(e->S.Error.message)
+  }
+}
+
+let fetch = async (route, bodyVal, func: (t => t) => unit) => {
+  open Fetch
+  let request = RequestInit.make(
+    ~method_=Post,
+    ~headers=HeadersInit.make({"Content-Type": "application/json"}),
+    ~body=BodyInit.make(JSON.stringify(bodyVal)),
+    (),
+  )
+
+  let res = try {
+    let req = await fetchWithInit(route, request)
+    switch req->Response.ok {
+    | true => {await Response.json(req)}->makeLobby
+    | false =>
+      Error(
+        `${req
+          ->Response.status
+          ->Int.toString}: ${req->Response.statusText}`->makeError,
+      )
+    }
+  } catch {
+  | Exn.Error(e) =>
+    switch Exn.message(e) {
+    | Some(msg) => Error(`JS error thrown: ${msg}`->makeError)
+    | None => Error("Some other exception has been thrown"->makeError)
+    }
+  }
+
+  switch res {
+  | Loading => ()
+  | Data(d) => func(_ => d)
+  | Error(e) => Console.log(e)
   }
 }
 

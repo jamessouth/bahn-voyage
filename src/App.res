@@ -10,7 +10,10 @@ let make = () => {
   open Router
   let route = useRouter()
 
-  let (xx, setXx) = React.Uncurried.useState(_ => "")
+  let (
+    lobbyGames: Lobby.t,
+    setLobbyGames: (Lobby.t => Lobby.t) => unit,
+  ) = React.Uncurried.useState(_ => [])
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   //   let (canEnter, setCanEnter) = React.Uncurried.useState(_ => false)
@@ -21,7 +24,7 @@ let make = () => {
   //   React.useEffect(() => {
   //     None
   //   }, [playerName])
-  Console.log2("xxx", xx)
+  Console.log2("xxx", lobbyGames)
   <main className="h-full p-4 flex flex-col items-center justify-around ">
     // lg:p-24
 
@@ -29,7 +32,7 @@ let make = () => {
     | Home =>
       <>
         // <Title />
-        <Home playerName setPlayerName setXx />
+        <Home playerName setPlayerName setLobbyGames />
       </>
     | Lobby =>
       <>
