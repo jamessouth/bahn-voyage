@@ -1,16 +1,11 @@
-// adapted from https://github.com/TheSpyder/rescript-webapi/blob/main/src/Webapi/Webapi__Fetch.resi
-
 type body
 type bodyInit
 type headers
 type headersInit
-type responseInit
 type response
+type responseInit
 type request
 type requestInit
-
-/* external */
-type urlSearchParams /* URL */
 
 type requestMethod =
   | Get
@@ -24,63 +19,10 @@ type requestMethod =
   | Patch
   | Other(string)
 
-type referrerPolicy =
-  | None
-  | NoReferrer
-  | NoReferrerWhenDowngrade
-  | SameOrigin
-  | Origin
-  | StrictOrigin
-  | OriginWhenCrossOrigin
-  | StrictOriginWhenCrossOrigin
-  | UnsafeUrl
-
-type requestDestination =
-  | None /* default? unknown? just empty string in spec */
-  | Document
-  | Embed
-  | Font
-  | Image
-  | Manifest
-  | Media
-  | Object
-  | Report
-  | Script
-  | ServiceWorker
-  | SharedWorker
-  | Style
-  | Worker
-  | Xslt
-
-type requestMode =
-  | Navigate
-  | SameOrigin
-  | NoCORS
-  | CORS
-
-type requestCredentials =
-  | Omit
-  | SameOrigin
-  | Include
-
-type requestCache =
-  | Default
-  | NoStore
-  | Reload
-  | NoCache
-  | ForceCache
-  | OnlyIfCached
-
-type requestRedirect =
-  | Follow
-  | Error
-  | Manual
-
 module HeadersInit: {
   type t = headersInit
 
   external make: {..} => t = "%identity"
-  external makeWithDict: Dict.t<string> => t = "%identity"
   external makeWithArray: array<(string, string)> => t = "%identity"
 }
 
@@ -106,13 +48,10 @@ module BodyInit: {
   type t = bodyInit
 
   external make: string => t = "%identity"
-  external makeWithUrlSearchParams: urlSearchParams => t = "%identity"
 }
 
 module Body: {
   type t = body
-
-  @get external bodyUsed: t => bool = "bodyUsed"
 
   @send external json: t => promise<JSON.t> = "json"
   @send external text: t => promise<string> = "text"
@@ -126,15 +65,31 @@ module RequestInit: {
     ~headers: headersInit=?,
     ~body: bodyInit=?,
     ~referrer: string=?,
-    ~referrerPolicy: referrerPolicy=?,
-    ~mode: requestMode=?,
-    ~credentials: requestCredentials=?,
-    ~cache: requestCache=?,
-    ~redirect: requestRedirect=?,
     ~integrity: string=?,
     ~keepalive: bool=?,
     unit,
   ) => t
+}
+
+module Request: {
+  type t = request
+
+  @new external make: string => t = "Request"
+  @new external makeWithInit: (string, requestInit) => t = "Request"
+  @new external makeWithRequest: t => t = "Request"
+  @new external makeWithRequestInit: (t, requestInit) => t = "Request"
+
+  let method_: t => requestMethod
+  @get external url: t => string = "url"
+  @get external headers: t => headers = "headers"
+  @get external referrer: t => string = "referrer"
+  @get external integrity: t => string = "integrity"
+  @get external keepalive: t => bool = "keepalive"
+
+  /* Body Impl */
+
+  @send external json: t => promise<JSON.t> = "json"
+  @send external text: t => promise<string> = "text"
 }
 
 module ResponseInit: {
@@ -161,11 +116,6 @@ module Response: {
   @get external statusText: t => string = "statusText"
   @get external type_: t => string = "type"
   @get external url: t => string = "url"
-
-  @send external clone: t => t = "clone"
-
-  /* Body.Impl */
-  @get external bodyUsed: t => bool = "bodyUsed"
 
   @send external json: t => promise<JSON.t> = "json"
   @send external text: t => promise<string> = "text"

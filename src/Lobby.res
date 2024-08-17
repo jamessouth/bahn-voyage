@@ -7,6 +7,8 @@ type t = array<lobbyGame>
 
 type error = string
 
+let makeError = (e: string): error => e
+
 type lobby =
   | Loading
   | Error(error)
@@ -19,8 +21,8 @@ let lobbySchema = S.array(
   }),
 )->S.arrayLength(3)
 
-let constructLobby = x => {
-  let val = x->S.parseAnyWith(lobbySchema)
+let constructLobby = json => {
+  let val = json->S.parseAnyWith(lobbySchema)
 
   switch val {
   | Ok(a) => Data(a)
