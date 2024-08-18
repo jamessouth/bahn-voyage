@@ -71,8 +71,8 @@ type req struct {
 }
 
 type game struct {
-	Id      int64 `json:"id"`
-	Players []req `json:"players"`
+	Id      string `json:"id"`
+	Players []req  `json:"players"`
 }
 
 type lobby struct {
@@ -110,7 +110,7 @@ func getLobby() http.HandlerFunc {
 
 		for len(lobbyGames.Games) < numLobbyGames {
 			lobbyGames.Games = append(lobbyGames.Games, game{
-				Id:      time.Now().UnixNano(),
+				Id:      fmt.Sprintf("%d", time.Now().UnixNano()),
 				Players: []req{},
 			})
 		}

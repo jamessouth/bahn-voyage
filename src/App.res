@@ -1,6 +1,3 @@
-module LazyLobby = {
-  let make = React.lazy_(() => import(Lobby.make))
-}
 module LazyGame = {
   let make = React.lazy_(() => import(Game.make))
 }
@@ -10,21 +7,17 @@ let make = () => {
   open Router
   let route = useRouter()
 
-  let (
-    lobbyGames: Lobby.t,
-    setLobbyGames: (Lobby.t => Lobby.t) => unit,
-  ) = React.Uncurried.useState(_ => [])
+  let (lobby, setLobby) = React.Uncurried.useState(_ => Lobby.Loading)
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   //   let (canEnter, setCanEnter) = React.Uncurried.useState(_ => false)
 
-  let lazyLobby = <LazyLobby playerName />
   let lazyGame = <LazyGame />
 
   //   React.useEffect(() => {
   //     None
   //   }, [playerName])
-  Console.log2("xxx", lobbyGames)
+  Console.log2("xxx", lobby)
   <main className="h-full p-4 flex flex-col items-center justify-around ">
     // lg:p-24
 
@@ -32,12 +25,13 @@ let make = () => {
     | Home =>
       <>
         // <Title />
-        <Home playerName setPlayerName setLobbyGames />
+        <Home playerName setPlayerName setLobby />
       </>
     | Lobby =>
       <>
         // <Title />
-        <React.Suspense fallback=React.null> lazyLobby </React.Suspense>
+        <Lobby playerName lobby />
+        // <React.Suspense fallback=React.null> lazyLobby </React.Suspense>
       </>
     | Game => <React.Suspense fallback=React.null> lazyGame </React.Suspense>
     | Other =>

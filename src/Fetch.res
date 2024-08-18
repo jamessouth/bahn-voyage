@@ -200,4 +200,4 @@ module Response = {
   @get external url: t => string = "url"
 }
 
-@val external fetchWithInit: (string, requestInit) => promise<response> = "fetch"
+@val external fetchWithInit: (Router.t, requestInit) => promise<response> = "fetch"

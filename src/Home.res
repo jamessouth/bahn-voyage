@@ -2,7 +2,7 @@ let user_min_len = 3
 let user_max_len = 12
 
 @react.component
-let make = (~playerName, ~setPlayerName, ~setLobbyGames) => {
+let make = (~playerName, ~setPlayerName, ~setLobby) => {
   let on_Click = () => {
     open String
     let sanitizedName =
@@ -12,7 +12,9 @@ let make = (~playerName, ~setPlayerName, ~setLobbyGames) => {
 
     let body = Dict.fromArray([("playerName", JSON.Encode.string(sanitizedName))])
 
-    Lobby.fetch("/lobby", JSON.Encode.object(body), setLobbyGames)->Promise.done
+    Lobby.fetch(JSON.Encode.object(body))
+    ->Promise.then(res => setLobby(_ => res)->Promise.resolve)
+    ->Promise.done
   }
 
   <Form on_Click>

@@ -121,4 +121,4 @@ module Response: {
   @send external text: t => promise<string> = "text"
 }
 
-@val external fetchWithInit: (string, requestInit) => promise<response> = "fetch"
+@val external fetchWithInit: (Router.t, requestInit) => promise<response> = "fetch"

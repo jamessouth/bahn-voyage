@@ -1,6 +1,6 @@
 type t =
   | Home
-  | Lobby
+  | @as("/lobby") Lobby
   | Game
   | Other
 

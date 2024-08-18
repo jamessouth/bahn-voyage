@@ -3,7 +3,7 @@ type lobbyGame = {
   players: array<string>,
 }
 
-type t = array<lobbyGame>
+type t = {games: array<lobbyGame>}
 
 type error = string
 
@@ -12,12 +12,18 @@ type lobby =
   | Error(error)
   | Data(t)
 
-let lobbySchema = S.array(
-  S.object(s => {
-    id: s.field("id", S.string),
-    players: s.field("players", S.array(S.string)->S.arrayMaxLength(5)),
-  }),
-)->S.arrayLength(3)
+let lobbySchema = S.object(o => {
+  games: o.field(
+    "games",
+    S.array(
+      S.object(s => {
+        id: s.field("id", S.string),
+        players: s.field("players", S.array(S.string)->S.arrayMaxLength(5)),
+      }),
+    )->S.arrayLength(3),
+  ),
+})
+
 let makeError = (e: string): error => e
 
 let makeLobby = json => {
@@ -29,7 +35,7 @@ let makeLobby = json => {
   }
 }
 
-let fetch = async (route, bodyVal, func: (t => t) => unit) => {
+let fetch = async bodyVal => {
   open Fetch
   let request = RequestInit.make(
     ~method_=Post,
@@ -38,8 +44,8 @@ let fetch = async (route, bodyVal, func: (t => t) => unit) => {
     (),
   )
 
-  let res = try {
-    let req = await fetchWithInit(route, request)
+  try {
+    let req = await fetchWithInit(Router.Lobby, request)
     switch req->Response.ok {
     | true => {await Response.json(req)}->makeLobby
     | false =>
@@ -56,15 +62,29 @@ let fetch = async (route, bodyVal, func: (t => t) => unit) => {
     | None => Error("Some other exception has been thrown"->makeError)
     }
   }
-
-  switch res {
-  | Loading => ()
-  | Data(d) => func(_ => d)
-  | Error(e) => Console.log(e)
-  }
 }
 
 @react.component
-let make = (~playerName) => {
-  <div> {React.string(`this is the lobby ${playerName}`)} </div>
+let make = (~playerName, ~lobby) => {
+  <div>
+    <p> {React.string(`this is the lobby ${playerName}`)} </p>
+    {switch lobby {
+    | Loading =>
+      <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
+        <Loading label="lobby..." />
+      </div>
+    | Error(err) => <p className="my-3 bg-white"> {React.string(err)} </p>
+    | Data(data) =>
+      data.games
+      ->Array.map(game =>
+        <div>
+          <p className="my-3 bg-white"> {React.string(game.id)} </p>
+          {game.players
+          ->Array.map(player => <p className="my-3 bg-white"> {React.string(player)} </p>)
+          ->React.array}
+        </div>
+      )
+      ->React.array
+    }}
+  </div>
 }

@@ -6,9 +6,7 @@ type lobby =
   | Error(error)
   | Data(t)
 
-let makeError: string => error
-let makeLobby: 'a => lobby
-let fetch: (string, RescriptCore.JSON.t, (t => t) => unit) => promise<unit>
+let fetch: RescriptCore.JSON.t => promise<lobby>
 
 @react.component
-let make: (~playerName: string) => Jsx.element
+let make: (~playerName: string, ~lobby: lobby) => Jsx.element
