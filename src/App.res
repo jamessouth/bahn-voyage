@@ -7,9 +7,9 @@ let make = () => {
   open Router
   let route = useRouter()
 
-  let (lobby, setLobby) = React.Uncurried.useState(_ => Lobby.Loading)
+  let (_lobby, _setLobby) = React.Uncurried.useState(_ => Lobby.Loading)
 
-  let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
+  let (_playerName, _setPlayerName) = React.Uncurried.useState(_ => "")
   //   let (canEnter, setCanEnter) = React.Uncurried.useState(_ => false)
 
   let lazyGame = <LazyGame />
@@ -17,7 +17,7 @@ let make = () => {
   //   React.useEffect(() => {
   //     None
   //   }, [playerName])
-  Console.log2("xxx", lobby)
+  //   Console.log2("xxx", lobby)
   <main className="h-full p-4 flex flex-col items-center justify-around ">
     // lg:p-24
 
@@ -25,14 +25,11 @@ let make = () => {
     | Home =>
       <>
         // <Title />
-        <Home playerName setPlayerName setLobby />
+        // <Home playerName setPlayerName setLobby />
+        <Lobby />
+        // playerName lobby
       </>
-    | Lobby =>
-      <>
-        // <Title />
-        <Lobby playerName lobby />
-        // <React.Suspense fallback=React.null> lazyLobby </React.Suspense>
-      </>
+    | Lobby => <> </>
     | Game => <React.Suspense fallback=React.null> lazyGame </React.Suspense>
     | Other =>
       <div className="text-center text-4xl bg-orange-100"> {React.string("page not found")} </div>

@@ -15,6 +15,8 @@ let make = (~playerName, ~setPlayerName, ~setLobby) => {
     Lobby.fetch(JSON.Encode.object(body))
     ->Promise.then(res => setLobby(_ => res)->Promise.resolve)
     ->Promise.done
+
+    Router.push(Router.Lobby)
   }
 
   <Form on_Click>
