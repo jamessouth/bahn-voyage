@@ -4,74 +4,84 @@ let game_code_len = 32
 let other_players_min = 0
 let other_players_max = 5
 
-type reqBodyOrError =
+type codeOrNum =
   | None
-  | ReqBody(dict<'a>)
-  | Error(string)
+  | GameCode(string)
+  | NumOtherPlayers(int)
+
+let getCodeOrNum = cn =>
+  switch cn {
+  | None => ""
+  | GameCode(gc) => gc
+  | NumOtherPlayers(n) => Int.toString(n)
+  }
 
 @react.component
-let make = (~homeProps as hp, ~setLobby) => {
-  let (bodyOrError, setBodyOrError) = React.Uncurried.useState(_ => None)
+let make = (~playerName, ~setPlayerName, ~codeOrNum, ~setCodeOrNum, ~setLobby) => {
+  let (bodyOrError, setBodyOrError) = React.Uncurried.useState(_ => Form.None)
 
   let on_Click = () => {
     open String
-    let encodedSanitizedName = JSON.Encode.string(
-      replaceAllRegExp(hp.playerName, %re("/\W/g"), "")
-      ->slice(~start=0, ~end=user_max_len)
-      ->padEnd(user_min_len, "_"),
+
+    let nameTuple = (
+      "playerName",
+      JSON.Encode.string(
+        replaceAllRegExp(playerName, %re("/\W/g"), "")
+        ->slice(~start=0, ~end=user_max_len)
+        ->padEnd(user_min_len, "_"),
+      ),
     )
 
-    let reqBodyOrError = switch hp.codeOrNum {
-    | None => Error("enter code or number")
+    switch codeOrNum {
+    | None => setBodyOrError(_ => Error("ERROR: " ++ "enter code or number"))
     | GameCode(code) =>
       switch match(code, %re("/^[a-f0-9]{32}$/")) {
-      | None => Error("code must be 32 chars long, a-f, 0-9")
+      | None => setBodyOrError(_ => Error("ERROR: " ++ "code must be 32 chars long, a-f, 0-9"))
       | Some(_) =>
-        ReqBody(
-          Dict.fromArray([
-            ("playerName", encodedSanitizedName),
-            ("gameCode", JSON.Encode.string(code)),
-          ]),
+        let bod = JSON.Encode.object(
+          Dict.fromArray([nameTuple, ("gameCode", JSON.Encode.string(code))]),
         )
+        setBodyOrError(_ => ReqBody(bod))
+        Lobby.fetch(bod)
+        ->Promise.then(res => {
+          Router.push(Router.Lobby)
+          setLobby(_ => res)->Promise.resolve
+        })
+        ->Promise.done
       }
     | NumOtherPlayers(num) =>
       switch num > other_players_min && num < other_players_max {
       | true =>
-        ReqBody(
-          Dict.fromArray([
-            ("playerName", encodedSanitizedName),
-            ("numOtherPlayers", JSON.Encode.int(num)),
-          ]),
+        let bod = JSON.Encode.object(
+          Dict.fromArray([nameTuple, ("numOtherPlayers", JSON.Encode.int(num))]),
         )
-      | false => Error("num must be 1, 2, 3, or 4")
-      }
-    }
+        setBodyOrError(_ => ReqBody(bod))
+        Lobby.fetch(bod)
+        ->Promise.then(res => {
+          Router.push(Router.Lobby)
+          setLobby(_ => res)->Promise.resolve
+        })
+        ->Promise.done
 
-    switch reqBodyOrError {
-    | ReqBody(body) => Lobby.fetch(JSON.Encode.object(body))
-      ->Promise.then(res => {
-        Router.push(Router.Lobby)
-        setLobby(_ => res)->Promise.resolve
-      })
-      ->Promise.done
-    | Error(err) => setError(_ => "ERROR: " ++ err)
+      | false => setBodyOrError(_ => Error("ERROR: " ++ "num must be 1, 2, 3, or 4"))
+      }
     }
   }
 
-  <Form on_Click error submitted>
+  <Form on_Click bodyOrError>
     <Input
-      value=hp.playerName
+      value=playerName
       autoComplete="username"
       placeholder="3-12 letters"
       label="username"
-      setFunc=hp.setPlayerName
+      setFunc=setPlayerName
     />
     <Input
-      value=hp.codeOrNum
+      value={getCodeOrNum(codeOrNum)}
       autoComplete="off"
       placeholder="32-char code or 1-4"
       label="game code or number 1-4"
-      setFunc=hp.setCodeOrNum
+      setFunc=setCodeOrNum
     />
   </Form>
 }

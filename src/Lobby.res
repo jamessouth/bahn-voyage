@@ -64,9 +64,9 @@ let fetch = async bodyVal => {
   }
 }
 
-// ~playerName, ~lobby
 @react.component
-let make = () => {
+let make = (~playerName, ~lobby) => {
+  Console.log2(playerName, lobby)
   <>
     <h1 className="font-amar text-center text-4xl"> {React.string("Lobby")} </h1>
     <div className="w-full h-36 bg-white px-1 pb-1">

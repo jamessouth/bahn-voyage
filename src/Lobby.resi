@@ -7,6 +7,6 @@ type lobby =
   | Data(t)
 
 let fetch: RescriptCore.JSON.t => promise<lobby>
-// ~playerName: string, ~lobby: lobby
+
 @react.component
-let make: unit => Jsx.element
+let make: (~playerName: string, ~lobby: lobby) => Jsx.element
