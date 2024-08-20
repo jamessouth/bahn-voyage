@@ -7,7 +7,7 @@ let make = () => {
   open Router
   let route = useRouter()
 
-  let (lobby, setLobby) = React.Uncurried.useState(_ => Lobby.Loading)
+  let (staging, setStaging) = React.Uncurried.useState(_ => Staging.Loading)
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (codeOrNum, setCodeOrNum) = React.Uncurried.useState(_ => Home.None)
@@ -17,7 +17,7 @@ let make = () => {
   //   React.useEffect(() => {
   //     None
   //   }, [playerName])
-  //   Console.log2("xxx", lobby)
+  //   Console.log2("xxx", staging)
   <main className="h-full p-4 flex flex-col items-center justify-around ">
     // lg:p-24
 
@@ -25,11 +25,11 @@ let make = () => {
     | Home =>
       <>
         // <Title />
-        <Home playerName setPlayerName codeOrNum setCodeOrNum setLobby />
+        <Home playerName setPlayerName codeOrNum setCodeOrNum setStaging />
       </>
-    | Lobby =>
+    | Staging =>
       <>
-        <Lobby playerName lobby />
+        <Staging playerName staging />
       </>
     | Game => <React.Suspense fallback=React.null> lazyGame </React.Suspense>
     | Other =>

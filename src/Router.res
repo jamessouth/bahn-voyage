@@ -1,13 +1,13 @@
 type t =
   | Home
-  | @as("/lobby") Lobby
+  | @as("/staging") Staging
   | Game
   | Other
 
 let urlStringToType = (url: RescriptReactRouter.url) =>
   switch url.path {
   | list{} => Home
-  | list{"lobby"} => Lobby
+  | list{"staging"} => Staging
   | list{"game"} => Game
   | _ => Other
   }
@@ -15,7 +15,7 @@ let urlStringToType = (url: RescriptReactRouter.url) =>
 let typeToUrlString = t =>
   switch t {
   | Home => "/"
-  | Lobby => "/lobby"
+  | Staging => "/staging"
   | Game => "/game"
   | Other => ""
   }

@@ -1,12 +1,12 @@
 type t
 type error
 
-type lobby =
+type staging =
   | Loading
   | Error(error)
   | Data(t)
 
-let fetch: RescriptCore.JSON.t => promise<lobby>
+let fetch: RescriptCore.JSON.t => promise<staging>
 
 @react.component
-let make: (~playerName: string, ~lobby: lobby) => Jsx.element
+let make: (~playerName: string, ~staging: staging) => Jsx.element

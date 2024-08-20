@@ -1,33 +1,33 @@
-type lobbyGame = {
+type stagingGame = {
   id: string,
+  desc: string,
   players: array<string>,
 }
 
-type t = {games: array<lobbyGame>}
+type t = {game: stagingGame}
 
 type error = string
 
-type lobby =
+type staging =
   | Loading
   | Error(error)
   | Data(t)
 
-let lobbySchema = S.object(o => {
-  games: o.field(
-    "games",
-    S.array(
-      S.object(s => {
-        id: s.field("id", S.string),
-        players: s.field("players", S.array(S.string)->S.arrayMaxLength(5)),
-      }),
-    )->S.arrayLength(3),
+let stagingSchema = S.object(o => {
+  game: o.field(
+    "game",
+    S.object(s => {
+      id: s.field("id", S.string->S.pattern(%re("/^[a-f0-9]{32}$/"))),
+      desc: s.field("desc", S.string->S.stringMaxLength(50)),
+      players: s.field("players", S.array(S.string)->S.arrayMinLength(1)->S.arrayMaxLength(5)),
+    }),
   ),
 })
 
 let makeError = (e: string): error => e
 
-let makeLobby = json => {
-  let val = json->S.parseAnyWith(lobbySchema)
+let makeStaging = json => {
+  let val = json->S.parseAnyWith(stagingSchema)
 
   switch val {
   | Ok(a) => Data(a)
@@ -45,9 +45,9 @@ let fetch = async bodyVal => {
   )
 
   try {
-    let req = await fetchWithInit(Router.Lobby, request)
+    let req = await fetchWithInit(Router.Staging, request)
     switch req->Response.ok {
-    | true => {await Response.json(req)}->makeLobby
+    | true => {await Response.json(req)}->makeStaging
     | false =>
       Error(
         `${req
@@ -65,51 +65,24 @@ let fetch = async bodyVal => {
 }
 
 @react.component
-let make = (~playerName, ~lobby) => {
-  Console.log2(playerName, lobby)
+let make = (~playerName, ~staging) => {
+  Console.log2(playerName, staging)
   <>
-    <h1 className="font-amar text-center text-4xl"> {React.string("Lobby")} </h1>
-    <div className="w-full h-36 bg-white px-1 pb-1">
-      <h3 className="text-xs text-center underline mb-2">
-        {React.string("Game no 1723957752542204596")}
-      </h3>
-      <p className="break-all text-center"> {React.string("aaa")} </p>
-    </div>
-    <div className="w-full h-36 bg-white px-1 pb-1">
-      <h3 className="text-xs text-center underline mb-2">
-        {React.string("Game no 1723957752542223010")}
-      </h3>
-      <p className="break-all text-center"> {React.string("aaa aaa aaa")} </p>
-    </div>
-    <div className="w-full h-36 bg-white px-1 pb-1">
-      <h3 className="text-xs text-center underline mb-2">
-        {React.string("Game no 1723957752542224536")}
-      </h3>
-      <p className="break-all text-center">
-        {React.string("mmmmmmmmmmmm mmmmmmmmmmmm mmmmmmmmmmmm mmmmmmmmmmmm mmmmmmmmmmmm")}
-      </p>
-    </div>
+    <h1 className="font-amar text-center text-4xl"> {React.string("Staging")} </h1>
+    {switch staging {
+    | Loading =>
+      <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
+        <Loading label="..." />
+      </div>
+    | Error(err) => <p className="my-3 bg-white"> {React.string(err)} </p>
+    | Data(data) =>
+      <div className="w-full h-48 bg-white px-1 pb-1">
+        <h6 className="text-center underline mb-2"> {React.string(data.game.id)} </h6>
+        <p className="text-sm break-all text-center"> {React.string(data.game.desc)} </p>
+        {data.game.players
+        ->Array.map(player => <p className="break-all text-center"> {React.string(player)} </p>)
+        ->React.array}
+      </div>
+    }}
   </>
-
-  //   <div>
-  //     <p> {React.string(`this is the lobby ${playerName}`)} </p>
-  //     {switch lobby {
-  //     | Loading =>
-  //       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
-  //         <Loading label="lobby..." />
-  //       </div>
-  //     | Error(err) => <p className="my-3 bg-white"> {React.string(err)} </p>
-  //     | Data(data) =>
-  //       data.games
-  //       ->Array.map(game =>
-  //         <div>
-  //           <p className="my-3 bg-white"> {React.string(game.id)} </p>
-  //           {game.players
-  //           ->Array.map(player => <p className="my-3 bg-white"> {React.string(player)} </p>)
-  //           ->React.array}
-  //         </div>
-  //       )
-  //       ->React.array
-  //     }}
-  //   </div>
 }

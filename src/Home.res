@@ -1,23 +1,21 @@
 let user_min_len = 3
 let user_max_len = 12
 let game_code_len = 32
-let other_players_min = 0
-let other_players_max = 5
 
 type codeOrNum =
   | None
   | GameCode(string)
-  | NumOtherPlayers(int)
+  | NumOtherPlayers(string)
 
 let getCodeOrNum = cn =>
   switch cn {
   | None => ""
   | GameCode(gc) => gc
-  | NumOtherPlayers(n) => Int.toString(n)
+  | NumOtherPlayers(n) => n
   }
 
 @react.component
-let make = (~playerName, ~setPlayerName, ~codeOrNum, ~setCodeOrNum, ~setLobby) => {
+let make = (~playerName, ~setPlayerName, ~codeOrNum, ~setCodeOrNum, ~setStaging) => {
   let (bodyOrError, setBodyOrError) = React.Uncurried.useState(_ => Form.None)
 
   let on_Click = () => {
@@ -42,24 +40,25 @@ let make = (~playerName, ~setPlayerName, ~codeOrNum, ~setCodeOrNum, ~setLobby) =
           Dict.fromArray([nameTuple, ("gameCode", JSON.Encode.string(code))]),
         )
         setBodyOrError(_ => ReqBody(bod))
-        Lobby.fetch(bod)
+        Staging.fetch(bod)
         ->Promise.then(res => {
-          Router.push(Router.Lobby)
-          setLobby(_ => res)->Promise.resolve
+          Router.push(Router.Staging)
+          setStaging(_ => res)->Promise.resolve
         })
         ->Promise.done
       }
+
     | NumOtherPlayers(num) =>
-      switch num > other_players_min && num < other_players_max {
+      switch ["1", "2", "3", "4"]->Array.includes(num) {
       | true =>
         let bod = JSON.Encode.object(
-          Dict.fromArray([nameTuple, ("numOtherPlayers", JSON.Encode.int(num))]),
+          Dict.fromArray([nameTuple, ("numOtherPlayers", JSON.Encode.string(num))]),
         )
         setBodyOrError(_ => ReqBody(bod))
-        Lobby.fetch(bod)
+        Staging.fetch(bod)
         ->Promise.then(res => {
-          Router.push(Router.Lobby)
-          setLobby(_ => res)->Promise.resolve
+          Router.push(Router.Staging)
+          setStaging(_ => res)->Promise.resolve
         })
         ->Promise.done
 
