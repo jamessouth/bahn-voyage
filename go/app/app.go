@@ -1,18 +1,24 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	// "github.com/joho/godotenv"
 	// "github.com/pusher/pusher-http-go/v5"
 	"github.com/urfave/negroni"
+
+	"github.com/google/uuid"
 )
 
 func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -28,18 +34,19 @@ func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.Han
 	next(w, r)
 }
 
-const numConcurrentGames = 3
+const maxGames = 3
 
 type stagingInput struct {
 	PlayerName      string `json:"playerName"`
 	GameCode        string `json:"gameCode"`
-	NumOtherPlayers string `json:"numOtherPlayers"`
+	NumOtherPlayers int    `json:"numOtherPlayers"`
+	HasCode         bool   `json:"-"`
 }
 
 type stagingGame struct {
-	Id      string   `json:"id"`
-	Desc    string   `json:"desc"`
-	Players []string `json:"players"`
+	Id             string   `json:"id"`
+	Desc           string   `json:"desc"`
+	PlayersOrCodes []string `json:"playersOrCodes"`
 }
 
 type staging struct {
@@ -47,48 +54,49 @@ type staging struct {
 }
 
 var (
-	stagedGame = staging{
-		Game: stagingGame{},
-	}
+	stagedGame staging
 )
 
-// func checkInput(s string) (string, string, error) {
-// 	var (
-// 		maxLength = 99
-// 		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
-// 		commandRE = regexp.MustCompile(`^join$|^leave$`)
-// 		body      struct{ Gameno, Command string }
-// 	)
+func checkInput(b []byte) (stagingInput, error) {
+	var (
+		maxLength            = 99
+		nameRE               = regexp.MustCompile(`^\w{3,12}$`)
+		uuidRE               = regexp.MustCompile(`^[a-f0-9]{32}$`)
+		playerNameBytes      = []byte{112, 108, 97, 121, 101, 114, 78, 97, 109, 101}
+		gameCodeBytes        = []byte{103, 97, 109, 101, 67, 111, 100, 101}
+		numOtherPlayersBytes = []byte{110, 117, 109, 79, 116, 104, 101, 114, 80, 108, 97, 121, 101, 114, 115}
+		body, blank          stagingInput
+	)
 
-// 	if len(s) > maxLength {
-// 		return "", "", fmt.Errorf("improper json input - too long: %d", len(s))
-// 	}
+	if len(b) > maxLength {
+		return blank, fmt.Errorf("improper json input - too long: %d", len(b))
+	}
+	if bytes.Count(b, playerNameBytes) != 1 || bytes.Count(b, gameCodeBytes)+bytes.Count(b, numOtherPlayersBytes) != 1 {
+		return blank, errors.New("improper json input - duplicate/missing key")
+	}
 
-// 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "command") != 1 {
-// 		return "", "", errors.New("improper json input - duplicate/missing key")
-// 	}
+	err := json.Unmarshal(b, &body)
+	if err != nil {
+		return blank, err
+	}
 
-// 	err := json.Unmarshal([]byte(s), &body)
-// 	if err != nil {
-// 		return "", "", err
-// 	}
+	if !nameRE.MatchString(body.PlayerName) {
+		return blank, errors.New("improper json input - bad playerName: " + body.PlayerName)
+	}
 
-// 	var gameno, command = body.Gameno, body.Command
+	if len(body.GameCode) == 0 {
+		if n := body.NumOtherPlayers; n != 1 && n != 2 && n != 3 && n != 4 {
+			return blank, fmt.Errorf("improper json input - bad numOtherPlayers: %d", body.NumOtherPlayers)
+		}
+	} else {
+		body.HasCode = true
+		if !uuidRE.MatchString(body.GameCode) {
+			return blank, errors.New("improper json input - bad gameCode: " + body.GameCode)
+		}
+	}
 
-// 	switch {
-// 	case !gamenoRE.MatchString(gameno):
-// 		return "", "", errors.New("improper json input - bad gameno: " + gameno)
-// 	case !commandRE.MatchString(command):
-// 		return "", "", errors.New("improper json input - bad command: " + command)
-// 	}
-
-// 	return gameno, command, nil
-// }
-
-// checkedGameno, checkedCommand, err := checkInput(bod)
-// 	if err != nil {
-// 		return callErr(err)
-// 	}
+	return body, nil
+}
 
 func getStaging() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -104,14 +112,44 @@ func getStaging() http.HandlerFunc {
 		}
 
 		// fmt.Println(r.Body)
+		// err := json.NewDecoder(r.Body).Decode(&s)
+		// fmt.Println("name", s)
 
-		var s string
-
-		err := json.NewDecoder(r.Body).Decode(&s)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			fmt.Println("g", err)
+			fmt.Println("readall", err)
 		}
-		fmt.Println("name", s)
+
+		checkedBody, err := checkInput(body)
+		if err != nil {
+			fmt.Println("readall: ", err)
+		}
+
+		var (
+			uuids       uuid.UUIDs
+			uuidStrings []string
+		)
+
+		if checkedBody.HasCode {
+
+		} else {
+			for i := 0; i < checkedBody.NumOtherPlayers; i++ {
+				nv7, err := uuid.NewV7()
+				if err != nil {
+					fmt.Println("uuid: ", err)
+				}
+				uuids = append(uuids, nv7)
+			}
+			uuidStrings = uuids.Strings()
+		}
+
+		stagedGame = staging{
+			Game: stagingGame{
+				Id:             fmt.Sprintf("%d", time.Now().UnixNano()),
+				Desc:           fmt.Sprintf("A %d player game", checkedBody.NumOtherPlayers+1),
+				PlayersOrCodes: append([]string{checkedBody.PlayerName}, uuidStrings...),
+			},
+		}
 
 		b, err := json.Marshal(stagedGame)
 		if err != nil {
