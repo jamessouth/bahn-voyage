@@ -34,8 +34,6 @@ func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.Han
 	next(w, r)
 }
 
-const maxGames = 3
-
 type stagingInput struct {
 	PlayerName      string `json:"playerName"`
 	GameCode        string `json:"gameCode"`
@@ -50,11 +48,12 @@ type stagingGame struct {
 }
 
 type staging struct {
-	Game stagingGame `json:"game"`
+	Game     stagingGame `json:"game"`
+	IsClosed bool        `json:"-"`
 }
 
 var (
-	stagedGame staging
+	availableGames = make([]staging, 3, 3)
 )
 
 func checkInput(b []byte) (stagingInput, error) {
@@ -125,30 +124,38 @@ func getStaging() http.HandlerFunc {
 			fmt.Println("readall: ", err)
 		}
 
-		var (
-			uuids       uuid.UUIDs
-			uuidStrings []string
-		)
+		if checkedBody.HasCode { //existing games
 
-		if checkedBody.HasCode {
+		} else { //new games
 
-		} else {
-			for i := 0; i < checkedBody.NumOtherPlayers; i++ {
-				nv7, err := uuid.NewV7()
-				if err != nil {
-					fmt.Println("uuid: ", err)
+			for i, ag := range availableGames {
+				if !ag.IsClosed {
+
+					var (
+						uuids       uuid.UUIDs
+						uuidStrings []string
+					)
+					for _ = range checkedBody.NumOtherPlayers {
+						nv7, err := uuid.NewV7()
+						if err != nil {
+							fmt.Println("uuid: ", err)
+						}
+						uuids = append(uuids, nv7)
+					}
+					uuidStrings = uuids.Strings()
+
+					availableGames[i] = staging{
+						Game: stagingGame{
+							Id:             fmt.Sprintf("%d", time.Now().UnixNano()),
+							Desc:           fmt.Sprintf("A %d player game", checkedBody.NumOtherPlayers+1),
+							PlayersOrCodes: append([]string{checkedBody.PlayerName}, uuidStrings...),
+						},
+						IsClosed: true,
+					}
+					break
 				}
-				uuids = append(uuids, nv7)
 			}
-			uuidStrings = uuids.Strings()
-		}
 
-		stagedGame = staging{
-			Game: stagingGame{
-				Id:             fmt.Sprintf("%d", time.Now().UnixNano()),
-				Desc:           fmt.Sprintf("A %d player game", checkedBody.NumOtherPlayers+1),
-				PlayersOrCodes: append([]string{checkedBody.PlayerName}, uuidStrings...),
-			},
 		}
 
 		b, err := json.Marshal(stagedGame)
