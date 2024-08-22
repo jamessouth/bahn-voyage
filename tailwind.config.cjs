@@ -11,8 +11,20 @@ module.exports = {
       boxShadow: {
         voyage: 'inset 0 0 13px 11px #edddbbbb',
       },
+      colors: {
+        black: {
+          dk: '#040306',
+        },
+        yellow: {
+          rg: '#fcca5f',
+        },
+      },
       fontFamily: {
         amar: 'Amarante, serif',
+      },
+      maxWidth: {
+        316: '316px',
+        // 'cont': '2000px',
       },
     },
   },

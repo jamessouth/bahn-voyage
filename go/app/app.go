@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -43,7 +44,6 @@ type stagingInput struct {
 
 type stagingGame struct {
 	Id             string   `json:"id"`
-	Desc           string   `json:"desc"`
 	PlayersOrCodes []string `json:"playersOrCodes"`
 }
 
@@ -144,11 +144,13 @@ func getStaging() http.HandlerFunc {
 						uuids = append(uuids, nv7)
 					}
 					uuidStrings = uuids.Strings()
+					for i, v := range uuidStrings {
+						uuidStrings[i] = strings.ReplaceAll(v, "-", "")
+					}
 
 					availableGames[i] = staging{
 						Game: stagingGame{
 							Id:             fmt.Sprintf("%d", time.Now().UnixNano()),
-							Desc:           fmt.Sprintf("A %d player game", checkedBody.NumOtherPlayers+1),
 							PlayersOrCodes: append([]string{checkedBody.PlayerName}, uuidStrings...),
 						},
 						IsClosed: true,

@@ -1,6 +1,7 @@
+@send external toString: int => string = "toString"
+
 type stagingGame = {
   id: string,
-  desc: string,
   playersOrCodes: array<string>,
 }
 
@@ -17,11 +18,12 @@ let stagingSchema = S.object(o => {
   game: o.field(
     "game",
     S.object(s => {
-      id: s.field("id", S.string->S.pattern(%re("/^[a-f0-9]{32}$/"))),
-      desc: s.field("desc", S.string->S.stringMaxLength(50)),
+      id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
       playersOrCodes: s.field(
         "playersOrCodes",
-        S.array(S.string)->S.arrayMinLength(1)->S.arrayMaxLength(5),
+        S.array(S.string->S.pattern(%re("/^[a-f0-9]{32}$|^\w{3,12}$/")))
+        ->S.arrayMinLength(2)
+        ->S.arrayMaxLength(5),
       ),
     }),
   ),
@@ -39,7 +41,6 @@ let makeStaging = json => {
     Error(e->S.Error.message)
   }
 }
-// Failed parsing at ["game"]["id"]. Reason: Invalid
 
 let fetch = async bodyVal => {
   open Fetch
@@ -74,20 +75,30 @@ let fetch = async bodyVal => {
 let make = (~playerName, ~staging) => {
   Console.log2(playerName, staging)
   <>
-    <h1 className="font-amar text-center text-4xl"> {React.string("Staging")} </h1>
+    <h1 className="font-amar text-center text-black-dk text-7xl"> {React.string("STAGING")} </h1>
     {switch staging {
     | Loading =>
       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
         <Loading label="..." />
       </div>
-    | Error(err) => <p className="my-3 bg-white"> {React.string(err)} </p>
+    | Error(err) => <p className="p-1 bg-yellow-rg text-center"> {React.string(err)} </p>
     | Data(data) =>
-      <div className="w-full h-48 bg-white px-1 pb-1">
-        <h6 className="text-center underline mb-2"> {React.string(data.game.id)} </h6>
-        <p className="text-sm break-all text-center"> {React.string(data.game.desc)} </p>
+      <div className="w-full text-black-dk bg-yellow-rg px-1 pb-1 max-w-316">
+        <h2 className="text-center text-xs underline "> {React.string(data.game.id)} </h2>
+        <p className="text-sm italic text-center mb-3">
+          {React.string(`A ${toString(Array.length(data.game.playersOrCodes))} player game`)}
+        </p>
         {data.game.playersOrCodes
-        ->Array.map(player => <p className="break-all text-center"> {React.string(player)} </p>)
+        ->Array.map(player => {
+          let bold = switch String.length(player) > 12 {
+          | true => ""
+          | false => " font-bold text-lg"
+          }
+          <p className={"mb-2 text-center" ++ bold}> {React.string(player)} </p>
+        })
         ->React.array}
+        <p className="text-sm mt-3 text-center"> {React.string("Send one code to each player")} </p>
+        <p className="text-xs  text-center"> {React.string("Tap to copy")} </p>
       </div>
     }}
   </>
