@@ -1,7 +1,7 @@
 type stagingGame = {
   id: string,
   desc: string,
-  players: array<string>,
+  playersOrCodes: array<string>,
 }
 
 type t = {game: stagingGame}
@@ -19,7 +19,10 @@ let stagingSchema = S.object(o => {
     S.object(s => {
       id: s.field("id", S.string->S.pattern(%re("/^[a-f0-9]{32}$/"))),
       desc: s.field("desc", S.string->S.stringMaxLength(50)),
-      players: s.field("players", S.array(S.string)->S.arrayMinLength(1)->S.arrayMaxLength(5)),
+      playersOrCodes: s.field(
+        "playersOrCodes",
+        S.array(S.string)->S.arrayMinLength(1)->S.arrayMaxLength(5),
+      ),
     }),
   ),
 })
@@ -31,9 +34,12 @@ let makeStaging = json => {
 
   switch val {
   | Ok(a) => Data(a)
-  | Error(e) => Error(e->S.Error.message)
+  | Error(e) =>
+    Console.log("here")
+    Error(e->S.Error.message)
   }
 }
+// Failed parsing at ["game"]["id"]. Reason: Invalid
 
 let fetch = async bodyVal => {
   open Fetch
@@ -79,7 +85,7 @@ let make = (~playerName, ~staging) => {
       <div className="w-full h-48 bg-white px-1 pb-1">
         <h6 className="text-center underline mb-2"> {React.string(data.game.id)} </h6>
         <p className="text-sm break-all text-center"> {React.string(data.game.desc)} </p>
-        {data.game.players
+        {data.game.playersOrCodes
         ->Array.map(player => <p className="break-all text-center"> {React.string(player)} </p>)
         ->React.array}
       </div>

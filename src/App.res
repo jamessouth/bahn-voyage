@@ -11,6 +11,7 @@ let make = () => {
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (codeOrNum, setCodeOrNum) = React.Uncurried.useState(_ => Home.None)
+  let (codeOrNumString, setCodeOrNumString) = React.Uncurried.useState(_ => "")
 
   let lazyGame = <LazyGame />
 
@@ -25,7 +26,15 @@ let make = () => {
     | Home =>
       <>
         // <Title />
-        <Home playerName setPlayerName codeOrNum setCodeOrNum setStaging />
+        <Home
+          playerName
+          setPlayerName
+          codeOrNum
+          setCodeOrNum
+          codeOrNumString
+          setCodeOrNumString
+          setStaging
+        />
       </>
     | Staging =>
       <>

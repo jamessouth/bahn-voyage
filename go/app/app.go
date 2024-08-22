@@ -53,7 +53,7 @@ type staging struct {
 }
 
 var (
-	availableGames = make([]staging, 3, 3)
+	availableGames = make([]staging, 3)
 )
 
 func checkInput(b []byte) (stagingInput, error) {
@@ -121,8 +121,9 @@ func getStaging() http.HandlerFunc {
 
 		checkedBody, err := checkInput(body)
 		if err != nil {
-			fmt.Println("readall: ", err)
+			fmt.Println("checkinput: ", err)
 		}
+		var b []byte
 
 		if checkedBody.HasCode { //existing games
 
@@ -135,7 +136,7 @@ func getStaging() http.HandlerFunc {
 						uuids       uuid.UUIDs
 						uuidStrings []string
 					)
-					for _ = range checkedBody.NumOtherPlayers {
+					for range checkedBody.NumOtherPlayers {
 						nv7, err := uuid.NewV7()
 						if err != nil {
 							fmt.Println("uuid: ", err)
@@ -152,17 +153,23 @@ func getStaging() http.HandlerFunc {
 						},
 						IsClosed: true,
 					}
+
+					b, err = json.Marshal(availableGames[i])
+					if err != nil {
+						fmt.Println("error:", err)
+					}
+
 					break
 				}
 			}
 
 		}
-
-		b, err := json.Marshal(stagedGame)
-		if err != nil {
-			fmt.Println("error:", err)
+		for _, v := range availableGames {
+			fmt.Printf("%+v\n", v)
 		}
+		fmt.Println()
 		os.Stdout.Write(b)
+		fmt.Println()
 
 		w.Write(b)
 
