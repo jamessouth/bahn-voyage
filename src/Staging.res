@@ -1,3 +1,7 @@
+type navigator
+@send @scope("clipboard")
+external writeText: (navigator, string) => promise<unit> = "writeText"
+@val external nav: navigator = "navigator"
 @send external toString: int => string = "toString"
 
 type stagingGame = {
@@ -71,6 +75,18 @@ let fetch = async bodyVal => {
   }
 }
 
+let writeToClipboard = async text => {
+  try {
+    await writeText(nav, text)
+  } catch {
+  | Exn.Error(e) =>
+    switch Exn.message(e) {
+    | Some(msg) => Console.log(`JS error thrown: ${msg}`)
+    | None => Console.log("Some other exception has been thrown")
+    }
+  }
+}
+
 @react.component
 let make = (~playerName, ~staging) => {
   Console.log2(playerName, staging)
@@ -94,7 +110,7 @@ let make = (~playerName, ~staging) => {
           | true =>
             <p
               onClick={e => {
-                Console.log(e)
+                ReactEvent.Mouse.target(e)["textContent"]->writeToClipboard->Promise.done
               }}
               className="mb-2 text-center">
               {React.string(player)}
@@ -103,8 +119,10 @@ let make = (~playerName, ~staging) => {
           }
         })
         ->React.array}
-        <p className="text-sm mt-3 text-center"> {React.string("Send one code to each player")} </p>
-        <p className="text-xs  text-center"> {React.string("Tap to copy")} </p>
+        <p className="text-sm mt-3 text-center">
+          {React.string("Read or send one code to each player")}
+        </p>
+        <p className="text-xs text-center"> {React.string("Tap a code to copy it")} </p>
       </div>
     }}
   </>

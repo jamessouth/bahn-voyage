@@ -1,7 +1,6 @@
 @val external parseInt: string => int = "parseInt"
 let user_min_len = 3
 let user_max_len = 12
-let game_code_len = 32
 
 type codeOrNum =
   | None
@@ -89,32 +88,21 @@ let make = (
       }
     )
   }
-  <>
-    <p
-      onClick={e => {
-        Console.log(ReactEvent.Mouse.target(e)["textContent"])
-      }}>
-      {React.string("VVBB")}
-    </p>
-    <Form on_Click bodyOrError>
-      <Input
-        value=playerName
-        autoComplete="username"
-        placeholder="3-12 letters"
-        label="username"
-        setFunc=setPlayerName
-      />
-      <Input
-        value=codeOrNumString
-        autoComplete="off"
-        placeholder="32-char code or 1-4"
-        label="game code or number 1-4"
-        setFunc=setCodeOrNumString
-      />
-    </Form>
-  </>
+
+  <Form on_Click bodyOrError>
+    <Input
+      value=playerName
+      autoComplete="username"
+      placeholder="3-12 letters"
+      label="username"
+      setFunc=setPlayerName
+    />
+    <Input
+      value=codeOrNumString
+      autoComplete="off"
+      placeholder="32-char code or 1-4"
+      label="game code or number 1-4"
+      setFunc=setCodeOrNumString
+    />
+  </Form>
 }
-// type navigator
-// @send @scope("clipboard") external writeText: (navigator, string) => Promise.t<navigator> = "writeText"
-// @val external doc: navigator = "navigator"
-// let el = writeText(doc, "myId")
