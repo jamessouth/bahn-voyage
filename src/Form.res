@@ -11,7 +11,7 @@ let make = (~on_Click, ~bodyOrError, ~children) => {
       {switch bodyOrError {
       | None => React.null
       | ReqBody(_) => <Loading label="..." />
-      | Error(err) => <p> {React.string(err)} </p>
+      | Error(err) => <p className="p-1 bg-yellow-rg text-center"> {React.string(err)} </p>
       }}
     </div>
     <Button

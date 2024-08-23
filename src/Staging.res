@@ -90,11 +90,17 @@ let make = (~playerName, ~staging) => {
         </p>
         {data.game.playersOrCodes
         ->Array.map(player => {
-          let bold = switch String.length(player) > 12 {
-          | true => ""
-          | false => " font-bold text-lg"
+          switch String.length(player) > 12 {
+          | true =>
+            <p
+              onClick={e => {
+                Console.log(e)
+              }}
+              className="mb-2 text-center">
+              {React.string(player)}
+            </p>
+          | false => <p className="mb-2 text-center font-bold text-lg"> {React.string(player)} </p>
           }
-          <p className={"mb-2 text-center" ++ bold}> {React.string(player)} </p>
         })
         ->React.array}
         <p className="text-sm mt-3 text-center"> {React.string("Send one code to each player")} </p>
