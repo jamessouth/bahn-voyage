@@ -45,3 +45,34 @@ div#vid {
     opacity: 1;
   }
 }
+
+.copy:after {
+  z-index: 1;
+  content: 'Copied!';
+  position: absolute;
+  opacity: 0;
+  padding: 1px;
+  /* bottom: -95%;
+    left: -60%; */
+  /* height: 130%;
+    width: 240%; */
+  background-color: #414745;
+  color: #e1d8b8;
+  border-radius: 5%;
+  animation: copied 3s ease-in-out forwards;
+}
+
+@keyframes copied {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

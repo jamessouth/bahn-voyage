@@ -4,9 +4,11 @@ external writeText: (navigator, string) => promise<unit> = "writeText"
 @val external nav: navigator = "navigator"
 @send external toString: int => string = "toString"
 
-@get external classList: Dom.htmlParagraphElement => Dom.domTokenList = "classList"
+@get external classList: {..} => Dom.domTokenList = "classList"
 @send external addClassList1: (Dom.domTokenList, string) => unit = "add"
 @send external removeClassList1: (Dom.domTokenList, string) => unit = "remove"
+
+let user_max_len = 12
 
 type stagingGame = {
   id: string,
@@ -112,11 +114,16 @@ let make = (~playerName, ~staging) => {
         </p>
         {data.game.playersOrCodes
         ->Array.map(player => {
-          switch String.length(player) > Home.user_max_len {
+          switch String.length(player) > user_max_len {
           | true =>
             <p
               onClick={e => {
-                ReactEvent.Mouse.target(e)["textContent"]->writeToClipboard->Promise.done
+                let this = ReactEvent.Mouse.target(e)
+                this->classList->addClassList1("copy")
+                this["textContent"]->writeToClipboard->Promise.done
+              }}
+              onAnimationEnd={e => {
+                ReactEvent.Animation.target(e)->classList->removeClassList1("copy")
               }}
               className="mb-3 text-center text-sm cursor-copy">
               {React.string(player)}

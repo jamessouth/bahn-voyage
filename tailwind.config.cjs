@@ -14,6 +14,7 @@ module.exports = {
       colors: {
         black: {
           dk: '#040306',
+          lt: '#414745',
         },
         white: {
           lt: '#e1d8b8',
@@ -23,10 +24,7 @@ module.exports = {
         },
       },
       dropShadow: {
-        h1: [
-          '0 4px 3px rgba(225, 216, 184, 0.25)',
-          '0 2px 2px rgba(225, 216, 184, 0.15)',
-        ],
+        h1: ['0 4px 3px rgba(225, 216, 184)', '0 2px 2px rgba(225, 216, 184)'],
       },
       fontFamily: {
         amar: 'Amarante, serif',
