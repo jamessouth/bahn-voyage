@@ -4,6 +4,10 @@ external writeText: (navigator, string) => promise<unit> = "writeText"
 @val external nav: navigator = "navigator"
 @send external toString: int => string = "toString"
 
+@get external classList: Dom.htmlParagraphElement => Dom.domTokenList = "classList"
+@send external addClassList1: (Dom.domTokenList, string) => unit = "add"
+@send external removeClassList1: (Dom.domTokenList, string) => unit = "remove"
+
 type stagingGame = {
   id: string,
   playersOrCodes: array<string>,
@@ -25,7 +29,7 @@ let stagingSchema = S.object(o => {
       id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
       playersOrCodes: s.field(
         "playersOrCodes",
-        S.array(S.string->S.pattern(%re("/^[a-f0-9]{32}$|^\w{3,12}$/")))
+        S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
         ->S.arrayMinLength(2)
         ->S.arrayMaxLength(5),
       ),
@@ -69,8 +73,8 @@ let fetch = async bodyVal => {
   } catch {
   | Exn.Error(e) =>
     switch Exn.message(e) {
-    | Some(msg) => Error(`JS error thrown: ${msg}`->makeError)
-    | None => Error("Some other exception has been thrown"->makeError)
+    | Some(msg) => Error(`JS fetch error thrown: ${msg}`->makeError)
+    | None => Error("Some other fetch exception has been thrown"->makeError)
     }
   }
 }
@@ -81,8 +85,8 @@ let writeToClipboard = async text => {
   } catch {
   | Exn.Error(e) =>
     switch Exn.message(e) {
-    | Some(msg) => Console.log(`JS error thrown: ${msg}`)
-    | None => Console.log("Some other exception has been thrown")
+    | Some(msg) => Console.log(`JS clipboard error thrown: ${msg}`)
+    | None => Console.log("Some other exception has been thrown while writing to clipboard")
     }
   }
 }
@@ -91,7 +95,9 @@ let writeToClipboard = async text => {
 let make = (~playerName, ~staging) => {
   Console.log2(playerName, staging)
   <>
-    <h1 className="font-amar text-center text-black-dk text-7xl"> {React.string("STAGING")} </h1>
+    <h1 className="font-amar text-center text-black-dk drop-shadow-h1 text-7xl">
+      {React.string("STAGING")}
+    </h1>
     {switch staging {
     | Loading =>
       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
@@ -99,27 +105,27 @@ let make = (~playerName, ~staging) => {
       </div>
     | Error(err) => <p className="p-1 bg-yellow-rg text-center"> {React.string(err)} </p>
     | Data(data) =>
-      <div className="w-full text-black-dk bg-yellow-rg px-1 pb-1 max-w-316">
+      <div className="w-full text-black-dk bg-yellow-rg px-1 pb-1 max-w-360">
         <h2 className="text-center text-xs underline "> {React.string(data.game.id)} </h2>
-        <p className="text-sm italic text-center mb-3">
+        <p className="text-sm italic text-center mb-4">
           {React.string(`A ${toString(Array.length(data.game.playersOrCodes))} player game`)}
         </p>
         {data.game.playersOrCodes
         ->Array.map(player => {
-          switch String.length(player) > 12 {
+          switch String.length(player) > Home.user_max_len {
           | true =>
             <p
               onClick={e => {
                 ReactEvent.Mouse.target(e)["textContent"]->writeToClipboard->Promise.done
               }}
-              className="mb-2 text-center">
+              className="mb-3 text-center text-sm cursor-copy">
               {React.string(player)}
             </p>
-          | false => <p className="mb-2 text-center font-bold text-lg"> {React.string(player)} </p>
+          | false => <p className="mb-3 text-center font-bold text-lg"> {React.string(player)} </p>
           }
         })
         ->React.array}
-        <p className="text-sm mt-3 text-center">
+        <p className="text-sm mt-4 text-center">
           {React.string("Read or send one code to each player")}
         </p>
         <p className="text-xs text-center"> {React.string("Tap a code to copy it")} </p>

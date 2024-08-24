@@ -2,24 +2,25 @@ package app
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"math/rand/v2"
 	"net/http"
 	"os"
 	"path"
 	"regexp"
-	"strings"
+
+	// "strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	// "github.com/joho/godotenv"
 	// "github.com/pusher/pusher-http-go/v5"
 	"github.com/urfave/negroni"
-
-	"github.com/google/uuid"
 )
 
 func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -60,7 +61,7 @@ func checkInput(b []byte) (stagingInput, error) {
 	var (
 		maxLength            = 99
 		nameRE               = regexp.MustCompile(`^\w{3,12}$`)
-		uuidRE               = regexp.MustCompile(`^[a-f0-9]{32}$`)
+		codeRE               = regexp.MustCompile(`^[A-Za-z0-9+/]{32}$`)
 		playerNameBytes      = []byte{112, 108, 97, 121, 101, 114, 78, 97, 109, 101}
 		gameCodeBytes        = []byte{103, 97, 109, 101, 67, 111, 100, 101}
 		numOtherPlayersBytes = []byte{110, 117, 109, 79, 116, 104, 101, 114, 80, 108, 97, 121, 101, 114, 115}
@@ -89,13 +90,29 @@ func checkInput(b []byte) (stagingInput, error) {
 		}
 	} else {
 		body.HasCode = true
-		if !uuidRE.MatchString(body.GameCode) {
+		if !codeRE.MatchString(body.GameCode) {
 			return blank, errors.New("improper json input - bad gameCode: " + body.GameCode)
 		}
 	}
 
 	return body, nil
 }
+
+func getCode(l, i int, sl []byte) string {
+	var buf bytes.Buffer
+	buf.Write(sl)
+	for range l {
+		buf.WriteRune(rand.Int32N(26) + 97)
+	}
+	buf.WriteByte(byte(i + 49))
+
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
+}
+
+// func getRandomSlice(s string, leng int) string {
+// 	k := rand.IntN(len(s) - (leng - 1))
+// 	return s[k : k+leng]
+// }
 
 func getStaging() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -133,25 +150,17 @@ func getStaging() http.HandlerFunc {
 				if !ag.IsClosed {
 
 					var (
-						uuids       uuid.UUIDs
-						uuidStrings []string
+						codes  []string
+						gameNo = fmt.Appendf([]byte{}, "%d", time.Now().UnixNano())
 					)
-					for range checkedBody.NumOtherPlayers {
-						nv7, err := uuid.NewV7()
-						if err != nil {
-							fmt.Println("uuid: ", err)
-						}
-						uuids = append(uuids, nv7)
-					}
-					uuidStrings = uuids.Strings()
-					for i, v := range uuidStrings {
-						uuidStrings[i] = strings.ReplaceAll(v, "-", "")
+					for i := range checkedBody.NumOtherPlayers {
+						codes = append(codes, getCode(4, i, gameNo))
 					}
 
 					availableGames[i] = staging{
 						Game: stagingGame{
-							Id:             fmt.Sprintf("%d", time.Now().UnixNano()),
-							PlayersOrCodes: append([]string{checkedBody.PlayerName}, uuidStrings...),
+							Id:             string(gameNo),
+							PlayersOrCodes: append([]string{checkedBody.PlayerName}, codes...),
 						},
 						IsClosed: true,
 					}

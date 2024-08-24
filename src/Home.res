@@ -36,8 +36,8 @@ let make = (
       switch codeOrNum {
       | None => setBodyOrError(_ => Error("ERROR: " ++ "enter code or number"))
       | GameCode(code) =>
-        switch match(code, %re("/^[a-f0-9]{32}$/")) {
-        | None => setBodyOrError(_ => Error("ERROR: " ++ "code must be 32 chars long, a-f, 0-9"))
+        switch match(code, %re("/^[A-Za-z0-9+/]{32}$/")) {
+        | None => setBodyOrError(_ => Error("ERROR: " ++ "code must be 32 chars long, A-Za-z0-9+/"))
         | Some(_) =>
           let bod = JSON.Encode.object(
             Dict.fromArray([nameTuple, ("gameCode", JSON.Encode.string(code))]),

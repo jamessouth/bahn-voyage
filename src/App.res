@@ -19,7 +19,7 @@ let make = () => {
   //     None
   //   }, [playerName])
   //   Console.log2("xxx", staging)
-  <main className="h-full p-4 flex flex-col items-center justify-around ">
+  <main className="h-full p-1 flex flex-col items-center justify-around ">
     // lg:p-24
 
     {switch route {

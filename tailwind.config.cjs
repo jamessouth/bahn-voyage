@@ -15,15 +15,24 @@ module.exports = {
         black: {
           dk: '#040306',
         },
+        white: {
+          lt: '#e1d8b8',
+        },
         yellow: {
           rg: '#fcca5f',
         },
+      },
+      dropShadow: {
+        h1: [
+          '0 4px 3px rgba(225, 216, 184, 0.25)',
+          '0 2px 2px rgba(225, 216, 184, 0.15)',
+        ],
       },
       fontFamily: {
         amar: 'Amarante, serif',
       },
       maxWidth: {
-        316: '316px',
+        360: '360px',
         // 'cont': '2000px',
       },
     },
