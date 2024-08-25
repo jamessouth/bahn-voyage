@@ -1,5 +1,5 @@
 @react.component
-let make = (~value, ~autoComplete, ~placeholder, ~label, ~setFunc) => {
+let make = (~value, ~autoComplete, ~placeholder, ~fontSize, ~label, ~setFunc) => {
   let onChange = e => setFunc(_ => ReactEvent.Form.target(e)["value"])
 
   <div className="max-w-xs lg:max-w-sm w-full">
@@ -8,7 +8,7 @@ let make = (~value, ~autoComplete, ~placeholder, ~label, ~setFunc) => {
     </label>
     <input
       autoComplete
-      className="h-6 w-full text-xl outline-none font-anon bg-white border-b-1 text-stone-900 border-stone-100 indent-2px"
+      className={`h-6 w-full ${fontSize} outline-none font-anon bg-white border-b-1 text-stone-900 border-stone-100 indent-2px`}
       id=label
       inputMode="text"
       onChange

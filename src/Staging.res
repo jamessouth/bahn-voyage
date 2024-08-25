@@ -25,18 +25,21 @@ type staging =
   | Data(t)
 
 let stagingSchema = S.object(o => {
-  game: o.field(
-    "game",
-    S.object(s => {
-      id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
-      playersOrCodes: s.field(
-        "playersOrCodes",
-        S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
-        ->S.arrayMinLength(2)
-        ->S.arrayMaxLength(5),
-      ),
-    }),
-  ),
+  o.tag("kind", "data")
+  Data({
+    game: o.field(
+      "game",
+      S.object(s => {
+        id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
+        playersOrCodes: s.field(
+          "playersOrCodes",
+          S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
+          ->S.arrayMinLength(2)
+          ->S.arrayMaxLength(5),
+        ),
+      }),
+    ),
+  })
 })
 
 let makeError = (e: string): error => e
@@ -125,7 +128,7 @@ let make = (~playerName, ~staging) => {
               onAnimationEnd={e => {
                 ReactEvent.Animation.target(e)->classList->removeClassList1("copy")
               }}
-              className="mb-3 text-center text-sm cursor-copy">
+              className="mb-3 text-center relative text-sm cursor-copy">
               {React.string(player)}
             </p>
           | false => <p className="mb-3 text-center font-bold text-lg"> {React.string(player)} </p>

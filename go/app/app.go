@@ -13,8 +13,8 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"slices"
 
-	// "strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -46,11 +46,13 @@ type stagingInput struct {
 type stagingGame struct {
 	Id             string   `json:"id"`
 	PlayersOrCodes []string `json:"playersOrCodes"`
+	IsClosed       bool     `json:"-"`
 }
 
 type staging struct {
-	Game     stagingGame `json:"game"`
-	IsClosed bool        `json:"-"`
+	Kind  string      `json:"kind"`
+	Game  stagingGame `json:"game"`
+	Error string      `json:"error,omitempty"`
 }
 
 var (
@@ -133,21 +135,38 @@ func getStaging() http.HandlerFunc {
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			fmt.Println("readall", err)
+			fmt.Println("readall:", err)
 		}
 
 		checkedBody, err := checkInput(body)
 		if err != nil {
-			fmt.Println("checkinput: ", err)
+			fmt.Println("checkinput:", err)
 		}
 		var b []byte
 
 		if checkedBody.HasCode { //existing games
+			decoded, err := base64.StdEncoding.DecodeString(checkedBody.GameCode)
+			if err != nil {
+				fmt.Println("decode error:", err)
+			}
+			gameNo := string(decoded[:19])
+
+			if slices.ContainsFunc(availableGames, func(g staging) bool {
+				return g.Game.Id == gameNo
+			}) {
+
+			} else {
+
+				b, err = json.Marshal(staging{Kind: "error", Error: "game not found"})
+				if err != nil {
+					fmt.Println("marshal error:", err)
+				}
+			}
 
 		} else { //new games
 
 			for i, ag := range availableGames {
-				if !ag.IsClosed {
+				if !ag.Game.IsClosed {
 
 					var (
 						codes  []string
@@ -161,13 +180,14 @@ func getStaging() http.HandlerFunc {
 						Game: stagingGame{
 							Id:             string(gameNo),
 							PlayersOrCodes: append([]string{checkedBody.PlayerName}, codes...),
+							IsClosed:       true,
 						},
-						IsClosed: true,
+						Kind: "data",
 					}
 
 					b, err = json.Marshal(availableGames[i])
 					if err != nil {
-						fmt.Println("error:", err)
+						fmt.Println("marshal error:", err)
 					}
 
 					break

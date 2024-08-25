@@ -51,11 +51,10 @@ div#vid {
   content: 'Copied!';
   position: absolute;
   opacity: 0;
-  padding: 1px;
-  /* bottom: -95%;
-    left: -60%; */
-  /* height: 130%;
-    width: 240%; */
+  padding: 4px;
+  top: -10px;
+  left: 50%;
+  translate: -50%;
   background-color: #414745;
   color: #e1d8b8;
   border-radius: 5%;

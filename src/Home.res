@@ -94,14 +94,16 @@ let make = (
       value=playerName
       autoComplete="username"
       placeholder="3-12 letters"
+      fontSize="text-xl"
       label="username"
       setFunc=setPlayerName
     />
     <Input
       value=codeOrNumString
       autoComplete="off"
-      placeholder="32-char code or 1-4"
-      label="game code or number 1-4"
+      placeholder="32-char code or a number 1-4"
+      fontSize="text-xs"
+      label="game code or a number 1-4"
       setFunc=setCodeOrNumString
     />
   </Form>
