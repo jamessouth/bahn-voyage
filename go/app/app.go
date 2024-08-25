@@ -14,6 +14,7 @@ import (
 	"path"
 	"regexp"
 	"slices"
+	"strings"
 
 	"time"
 
@@ -111,11 +112,6 @@ func getCode(l, i int, sl []byte) string {
 	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
-// func getRandomSlice(s string, leng int) string {
-// 	k := rand.IntN(len(s) - (leng - 1))
-// 	return s[k : k+leng]
-// }
-
 func getStaging() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// defer r.Body.Close()
@@ -128,10 +124,6 @@ func getStaging() http.HandlerFunc {
 		if r.Method != http.MethodPost {
 			return
 		}
-
-		// fmt.Println(r.Body)
-		// err := json.NewDecoder(r.Body).Decode(&s)
-		// fmt.Println("name", s)
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -151,11 +143,45 @@ func getStaging() http.HandlerFunc {
 			}
 			gameNo := string(decoded[:19])
 
-			if slices.ContainsFunc(availableGames, func(g staging) bool {
-				return g.Game.Id == gameNo
-			}) {
+			n, found := slices.BinarySearchFunc(availableGames, staging{
+				Kind: "",
+				Game: stagingGame{
+					Id:             gameNo,
+					PlayersOrCodes: []string{},
+					IsClosed:       false,
+				},
+				Error: "",
+			}, func(a, b staging) int {
+				return strings.Compare(a.Game.Id, b.Game.Id)
+			})
 
-			} else {
+			if found { //game found
+				game := availableGames[n]
+
+				ind := -1
+				for i, v := range game.Game.PlayersOrCodes {
+					if v == checkedBody.GameCode {
+						ind = i
+						break
+					}
+				}
+
+				if ind > -1 { //code found
+					game.Game.PlayersOrCodes[ind] = checkedBody.PlayerName
+
+					b, err = json.Marshal(game)
+					if err != nil {
+						fmt.Println("marshal error:", err)
+					}
+
+				} else { //code not found
+					b, err = json.Marshal(staging{Kind: "error", Error: "incorrect code"})
+					if err != nil {
+						fmt.Println("marshal error:", err)
+					}
+				}
+
+			} else { //game not found
 
 				b, err = json.Marshal(staging{Kind: "error", Error: "game not found"})
 				if err != nil {
@@ -208,6 +234,9 @@ func getStaging() http.HandlerFunc {
 }
 
 func Init() {
+	for i := range availableGames {
+		availableGames[i].Game.Id = "9999999999999999999"
+	}
 	// if err := godotenv.Load(); err != nil {
 	// 	log.Fatalf("could not load .env file... %v", err)
 	// }

@@ -17,41 +17,52 @@ type stagingGame = {
 
 type t = {game: stagingGame}
 
-type error = string
+type error = {error: string}
 
 type staging =
   | Loading
-  | Error(error)
   | Data(t)
+  | Error(error)
 
-let stagingSchema = S.object(o => {
-  o.tag("kind", "data")
-  Data({
-    game: o.field(
-      "game",
-      S.object(s => {
-        id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
-        playersOrCodes: s.field(
-          "playersOrCodes",
-          S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
-          ->S.arrayMinLength(2)
-          ->S.arrayMaxLength(5),
-        ),
-      }),
-    ),
-  })
-})
+let stagingSchema = S.union([
+  S.object(o => {
+    o.tag("kind", "data")
+    Data({
+      game: o.field(
+        "game",
+        S.object(s => {
+          id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
+          playersOrCodes: s.field(
+            "playersOrCodes",
+            S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
+            ->S.arrayMinLength(2)
+            ->S.arrayMaxLength(5),
+          ),
+        }),
+      ),
+    })
+  }),
+  S.object(o => {
+    o.tag("kind", "error")
+    Error({
+      error: o.field("error", S.string->S.stringMinLength(5)->S.stringMaxLength(50)),
+    })
+  }),
+])
 
-let makeError = (e: string): error => e
+let makeError = (e: string): error => {error: e}
 
 let makeStaging = json => {
-  let val = json->S.parseAnyWith(stagingSchema)
-
-  switch val {
-  | Ok(a) => Data(a)
+  switch json->S.parseAnyWith(stagingSchema) {
+  | Ok(a) =>
+    switch a {
+    | Loading => Loading
+    | Data(d) => Data(d)
+    | Error(e) => Error(e)
+    }
   | Error(e) =>
     Console.log("here")
-    Error(e->S.Error.message)
+    Error(e->S.Error.message->makeError)
   }
 }
 
@@ -108,7 +119,7 @@ let make = (~playerName, ~staging) => {
       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
         <Loading label="..." />
       </div>
-    | Error(err) => <p className="p-1 bg-yellow-rg text-center"> {React.string(err)} </p>
+    | Error(err) => <p className="p-1 bg-yellow-rg text-center"> {React.string(err.error)} </p>
     | Data(data) =>
       <div className="w-full text-black-dk bg-yellow-rg px-1 pb-1 max-w-360">
         <h2 className="text-center text-xs underline "> {React.string(data.game.id)} </h2>

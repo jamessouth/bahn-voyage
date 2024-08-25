@@ -3,8 +3,8 @@ type error
 
 type staging =
   | Loading
-  | Error(error)
   | Data(t)
+  | Error(error)
 
 let fetch: RescriptCore.JSON.t => promise<staging>
 

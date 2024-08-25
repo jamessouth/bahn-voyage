@@ -8,7 +8,7 @@ let make = (~value, ~autoComplete, ~placeholder, ~fontSize, ~label, ~setFunc) =>
     </label>
     <input
       autoComplete
-      className={`h-6 w-full ${fontSize} outline-none font-anon bg-white border-b-1 text-stone-900 border-stone-100 indent-2px`}
+      className={`h-6 w-full ${fontSize} outline-none indent-0.5 bg-white-lt text-black-dk `}
       id=label
       inputMode="text"
       onChange
