@@ -156,10 +156,9 @@ func getStaging() http.HandlerFunc {
 			})
 
 			if found { //game found
-				game := availableGames[n]
 
 				ind := -1
-				for i, v := range game.Game.PlayersOrCodes {
+				for i, v := range availableGames[n].Game.PlayersOrCodes {
 					if v == checkedBody.GameCode {
 						ind = i
 						break
@@ -167,9 +166,19 @@ func getStaging() http.HandlerFunc {
 				}
 
 				if ind > -1 { //code found
-					game.Game.PlayersOrCodes[ind] = checkedBody.PlayerName
+					availableGames[n].Game.PlayersOrCodes[ind] = checkedBody.PlayerName
 
-					b, err = json.Marshal(game)
+					gameToSend := availableGames[n]
+					hideCodes := []string{}
+					for _, v := range gameToSend.Game.PlayersOrCodes {
+						if len(v) > 12 {
+							v = "waiting..."
+						}
+						hideCodes = append(hideCodes, v)
+					}
+					gameToSend.Game.PlayersOrCodes = hideCodes
+
+					b, err = json.Marshal(gameToSend)
 					if err != nil {
 						fmt.Println("marshal error:", err)
 					}

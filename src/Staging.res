@@ -34,7 +34,7 @@ let stagingSchema = S.union([
           id: s.field("id", S.string->S.pattern(%re("/^\d{19}$/"))),
           playersOrCodes: s.field(
             "playersOrCodes",
-            S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$/")))
+            S.array(S.string->S.pattern(%re("/^[A-Za-z0-9+/]{32}$|^\w{3,12}$|^waiting...$/")))
             ->S.arrayMinLength(2)
             ->S.arrayMaxLength(5),
           ),
