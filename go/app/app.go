@@ -15,27 +15,14 @@ import (
 	"regexp"
 	"slices"
 	"strings"
-
 	"time"
 
+	"github.com/centrifugal/centrifuge"
 	"github.com/go-chi/chi/v5"
+
 	// "github.com/joho/godotenv"
-	// "github.com/pusher/pusher-http-go/v5"
 	"github.com/urfave/negroni"
 )
-
-func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	str := ""
-
-	if path.Clean(r.URL.Path) == "/" {
-		str = "no-cache, no-store, must-revalidate"
-	} else {
-		str = "public, max-age=31536000, immutable"
-	}
-
-	w.Header().Set("Cache-Control", str)
-	next(w, r)
-}
 
 type stagingInput struct {
 	PlayerName      string `json:"playerName"`
@@ -59,6 +46,31 @@ type staging struct {
 var (
 	availableGames = make([]staging, 3)
 )
+
+func setCacheControlHeader(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	str := ""
+
+	if path.Clean(r.URL.Path) == "/" {
+		str = "no-cache, no-store, must-revalidate"
+	} else {
+		str = "public, max-age=31536000, immutable"
+	}
+
+	w.Header().Set("Cache-Control", str)
+	next(w, r)
+}
+
+func auth(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		cred := &centrifuge.Credentials{
+			UserID: "",
+		}
+		newCtx := centrifuge.SetCredentials(ctx, cred)
+		r = r.WithContext(newCtx)
+		h.ServeHTTP(w, r)
+	})
+}
 
 func checkInput(b []byte) (stagingInput, error) {
 	var (
@@ -250,24 +262,43 @@ func Init() {
 	// 	log.Fatalf("could not load .env file... %v", err)
 	// }
 
-	// appID := os.Getenv("PUSHER_APP_ID")
-	// appKey := os.Getenv("PUSHER_APP_KEY")
-	// appSecret := os.Getenv("PUSHER_APP_SECRET")
-	// appCluster := os.Getenv("PUSHER_APP_CLUSTER")
+	node, err := centrifuge.New(centrifuge.Config{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// pusher := &pusher.Client{
-	// 	AppID:   appID,
-	// 	Key:     appKey,
-	// 	Secret:  appSecret,
-	// 	Cluster: appCluster,
-	// 	Secure:  true,
-	// }
+	node.OnConnect(func(client *centrifuge.Client) {
+		// In our example transport will always be Websocket but it can be different.
+		transportName := client.Transport().Name()
+		// In our example clients connect with JSON protocol but it can also be Protobuf.
+		transportProto := client.Transport().Protocol()
+		log.Printf("client connected via %s (%s)", transportName, transportProto)
+
+		client.OnSubscribe(func(e centrifuge.SubscribeEvent, cb centrifuge.SubscribeCallback) {
+			log.Printf("client subscribes on channel %s", e.Channel)
+			cb(centrifuge.SubscribeReply{}, nil)
+		})
+
+		client.OnPublish(func(e centrifuge.PublishEvent, cb centrifuge.PublishCallback) {
+			log.Printf("client publishes into channel %s: %s", e.Channel, string(e.Data))
+			cb(centrifuge.PublishReply{}, nil)
+		})
+
+		// Set Disconnect handler to react on client disconnect events.
+		client.OnDisconnect(func(e centrifuge.DisconnectEvent) {
+			log.Printf("client disconnected")
+		})
+	})
+
+	if err := node.Run(); err != nil {
+		log.Fatal(err)
+	}
 
 	r := chi.NewRouter()
 
 	r.Post("/staging", getStaging())
-	// r.Post("/pusher/auth", authenticateUsers(pusher))
-	// r.Post("/start", startGame(pusher))
+	wsHandler := centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{})
+	r.Handle("/connection/websocket", auth(wsHandler))
 
 	n := negroni.New()
 	n.Use(negroni.NewLogger())
@@ -292,39 +323,3 @@ func Init() {
 	log.Fatal(srv.ListenAndServe())
 
 }
-
-// var conns = make(map[string]string)
-
-// from pusher tutorial
-// func authenticateUsers(client *pusher.Client) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		// defer r.Body.Close()
-
-// 		// Handle CORS
-// 		w.Header().Set("Access-Control-Allow-Origin", "*")
-// 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-// 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-// 		if r.Method == http.MethodOptions {
-// 			return
-// 		}
-// 		// socket_id=211400.6425257&channel_name=private-gamestate-channel
-// 		params, _ := io.ReadAll(r.Body)
-// 		fmt.Println("params: ", string(params))
-
-// 		cookie, _ := r.Cookie("bv_playername")
-// 		fmt.Println("cookie", cookie.Name, cookie.Value)
-
-// 		sock := bytes.Split(bytes.Split(params, []byte{38})[0], []byte{61})[1]
-// 		fmt.Println("sss", string(sock))
-// 		conns[string(sock)] = cookie.Value
-// 		fmt.Println("cc", conns)
-// 		response, err := client.AuthorizePrivateChannel(params)
-// 		if err != nil {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			return
-// 		}
-
-// 		w.Write(response)
-// 	}
-// }

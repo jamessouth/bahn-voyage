@@ -21,7 +21,7 @@
   "dependencies": {
     "@rescript/core": "^1.5.2",
     "@rescript/react": "^0.12.1",
-    "pusher-js": "^8.4.0-rc2",
+    "centrifuge": "^5.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rescript": "^11.1.3",
